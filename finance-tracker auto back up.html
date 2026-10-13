@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Finance Tracker — v1.02 (adds subscriptions + custom backup folder setting) -->
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Finance">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0B3D2E">
-<title>Finance — Personal Finance Tracker</title>
+<meta name="app-version" content="1.02">
+<title>Finance — Personal Finance Tracker (v1.02)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
@@ -457,6 +459,7 @@ a{color:inherit;}
       <li><button class="nav-btn" data-view="budgets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg> Budgets</button></li>
       <li><button class="nav-btn" data-view="recurring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 2l4 4-4 4"/><path d="M3 12v-2a4 4 0 014-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 12v2a4 4 0 01-4 4H3"/></svg> Recurring &amp; Debts</button></li>
       <li><button class="nav-btn" data-view="categories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 12.6l-8.2 8.2a2 2 0 01-2.8 0l-6.4-6.4a2 2 0 010-2.8l8.2-8.2A2 2 0 0112.8 3H19a2 2 0 012 2v6.2a2 2 0 01-.4 1.4z"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg> Categories</button></li>
+      <li><button class="nav-btn" data-view="subscriptions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2.5"/><path d="M2 9h20"/><path d="M6 14h4"/></svg> Subscriptions</button></li>
       <li><button class="nav-btn" data-view="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg> Reports</button></li>
       <li><button class="nav-btn" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.6 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2.5a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 008.92 4.28h.08A1.65 1.65 0 0010.5 2.77V2.5a2 2 0 014 0v.09c0 .68.39 1.29 1 1.51.33.13.68.19 1 .19.34 0 .68-.07 1-.19"/></svg> Settings</button></li>
     </ul>
@@ -684,6 +687,35 @@ a{color:inherit;}
         </div>
       </section>
 
+      <!-- SUBSCRIPTIONS -->
+      <section class="view" id="view-subscriptions">
+        <div class="summary-grid" style="grid-template-columns:repeat(2,1fr); margin-bottom:20px;">
+          <div class="stat-card">
+            <div class="label">Total monthly subscriptions</div>
+            <div class="value mono negative" id="statSubTotal">€0.00</div>
+            <div class="sub" id="statSubCount">0 subscriptions</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Estimated yearly cost</div>
+            <div class="value mono negative" id="statSubYearly">€0.00</div>
+            <div class="sub">&nbsp;</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">
+            <div><h2>Subscriptions</h2><div class="desc">Streaming, music, gaming and other entertainment subscriptions</div></div>
+            <button class="btn btn-primary btn-sm" id="addSubBtn">+ Add subscription</button>
+          </div>
+          <div class="budget-grid" id="subGrid"></div>
+          <div class="empty-state hidden" id="subEmptyState">
+            <div class="glyph">🎬</div>
+            <h3>No subscriptions yet</h3>
+            <p>Add Netflix, Spotify, or any other subscription to keep track of the total.</p>
+            <button class="btn btn-primary" id="addSubEmptyBtn">Add subscription</button>
+          </div>
+        </div>
+      </section>
+
       <!-- REPORTS -->
       <section class="view" id="view-reports">
         <div class="filters-bar" style="margin-bottom:16px;">
@@ -760,6 +792,13 @@ a{color:inherit;}
               <div class="settings-row">
                 <div><div class="label">Automatic backups</div><div class="desc">Silently download a JSON backup once per day when you open the app</div></div>
                 <button type="button" class="switch-btn" id="autoBackupToggle" role="switch" aria-checked="true" aria-label="Toggle automatic backups"><span class="switch-knob"></span></button>
+              </div>
+              <div class="settings-row">
+                <div><div class="label">Backup folder</div><div class="desc" id="backupFolderDesc">Not set — files download to your browser's default Downloads folder</div></div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-ghost btn-sm" id="chooseBackupFolderBtn">Choose folder</button>
+                  <button class="btn btn-ghost btn-sm hidden" id="clearBackupFolderBtn">Clear</button>
+                </div>
               </div>
               <div class="settings-row">
                 <div><div class="label">Last backup</div><div class="desc" id="lastBackupDesc">Never backed up</div></div>
@@ -909,6 +948,43 @@ a{color:inherit;}
   </div>
 </div>
 
+<!-- Subscription Modal -->
+<div class="modal-overlay" id="subModalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="subModalTitle" style="max-width:420px;">
+    <div class="modal-head">
+      <div><h2 id="subModalTitle">Add subscription</h2></div>
+      <button class="icon-btn modal-close" id="subModalClose" aria-label="Close dialog"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <form id="subForm" novalidate>
+      <input type="hidden" id="subId">
+      <div class="form-row">
+        <label for="subName">Name</label>
+        <input type="text" id="subName" placeholder="e.g. Netflix" required>
+        <div class="field-error" id="err-subName">Name can't be empty.</div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="subAmount">Amount / month</label>
+          <input type="number" id="subAmount" step="0.01" min="0" placeholder="0.00" required>
+          <div class="field-error" id="err-subAmount">Enter a valid amount.</div>
+        </div>
+        <div class="form-row">
+          <label for="subIcon">Icon (emoji)</label>
+          <input type="text" id="subIcon" placeholder="🎬" maxlength="4">
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="subDueDay">Billing day of month (optional)</label>
+        <input type="number" id="subDueDay" min="1" max="31" placeholder="e.g. 15">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="subCancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="subSubmitBtn">Add subscription</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Debt Modal -->
 <div class="modal-overlay" id="debtModalOverlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="debtModalTitle" style="max-width:460px;">
@@ -1005,7 +1081,8 @@ const LS_KEYS = {
   categories:'ft_categories',
   budgets:'ft_budgets',
   settings:'ft_settings',
-  debts:'ft_debts'
+  debts:'ft_debts',
+  subscriptions:'ft_subscriptions'
 };
 
 const CURRENCY_SYMBOLS = { EUR:'€', USD:'$', GBP:'£', CHF:'CHF', SEK:'kr', NOK:'kr', DKK:'kr' };
@@ -1040,6 +1117,7 @@ let state = {
   categories: [],
   budgets: {},      // categoryId -> monthly amount
   debts: [],
+  subscriptions: [],
   settings: defaultSettings(),
   currentView: 'dashboard',
   txFilters: { search:'', type:'all', category:'all', dateStart:'', dateEnd:'' },
@@ -1051,10 +1129,136 @@ let state = {
   editingTxId: null,
   editingCatId: null,
   editingDebtId: null,
+  editingSubId: null,
   pendingCatDelete: null
 };
 
 let charts = { trend:null, cat:null, cashflow:null, report:null };
+let backupDirHandle = null; // File System Access API directory handle, if the user picked one
+
+/* ============================================================
+   BACKUP FOLDER (File System Access API + IndexedDB)
+   Only supported in Chromium browsers (Chrome, Edge, Opera, Brave).
+   Falls back to a normal download in unsupported browsers.
+============================================================ */
+const FS_SUPPORTED = typeof window.showDirectoryPicker === 'function';
+
+function idbOpen(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open('ft_fs_handles', 1);
+    req.onupgradeneeded = ()=> req.result.createObjectStore('handles');
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbGet(key){
+  const db = await idbOpen();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction('handles','readonly');
+    const req = tx.objectStore('handles').get(key);
+    req.onsuccess = ()=> resolve(req.result || null);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbSet(key, value){
+  const db = await idbOpen();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction('handles','readwrite');
+    tx.objectStore('handles').put(value, key);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+async function idbDelete(key){
+  const db = await idbOpen();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction('handles','readwrite');
+    tx.objectStore('handles').delete(key);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+
+async function restoreBackupFolder(){
+  if(!FS_SUPPORTED) return;
+  try{
+    const handle = await idbGet('backupDir');
+    if(!handle) return;
+    const perm = await handle.queryPermission({mode:'readwrite'});
+    if(perm === 'granted'){ backupDirHandle = handle; }
+    else{ backupDirHandle = handle; } // keep handle; permission will be (re)requested on next explicit save
+  }catch(e){ /* ignore corrupt/missing handle */ }
+}
+
+async function chooseBackupFolder(){
+  if(!FS_SUPPORTED){
+    showToast("Your browser doesn't support choosing a folder", true);
+    return;
+  }
+  try{
+    const handle = await window.showDirectoryPicker({mode:'readwrite'});
+    const perm = await handle.requestPermission({mode:'readwrite'});
+    if(perm !== 'granted'){ showToast('Permission to write to that folder was denied', true); return; }
+    backupDirHandle = handle;
+    await idbSet('backupDir', handle);
+    updateBackupFolderUI();
+    showToast('Backup folder set to "' + handle.name + '"');
+  }catch(e){
+    if(e && e.name === 'AbortError') return; // user cancelled the picker
+    showToast('Could not set backup folder', true);
+  }
+}
+
+async function clearBackupFolder(){
+  backupDirHandle = null;
+  try{ await idbDelete('backupDir'); }catch(e){}
+  updateBackupFolderUI();
+  showToast('Backup folder cleared');
+}
+
+function updateBackupFolderUI(){
+  const desc = document.getElementById('backupFolderDesc');
+  const chooseBtn = document.getElementById('chooseBackupFolderBtn');
+  const clearBtn = document.getElementById('clearBackupFolderBtn');
+  if(!FS_SUPPORTED){
+    desc.textContent = "Not supported in this browser — files will download to your default Downloads folder";
+    chooseBtn.disabled = true;
+    clearBtn.classList.add('hidden');
+    return;
+  }
+  if(backupDirHandle){
+    desc.textContent = 'Saving backups to "' + backupDirHandle.name + '"';
+    chooseBtn.textContent = 'Change folder';
+    clearBtn.classList.remove('hidden');
+  } else {
+    desc.textContent = "Not set — files download to your browser's default Downloads folder";
+    chooseBtn.textContent = 'Choose folder';
+    clearBtn.classList.add('hidden');
+  }
+}
+
+// Writes a file to the chosen folder if one is set and permission is granted;
+// otherwise falls back to a normal browser download. `interactive` should be
+// true when called from a direct user click (allows re-requesting permission).
+async function saveBackupFile(filename, content, mime, interactive){
+  if(backupDirHandle){
+    try{
+      let perm = await backupDirHandle.queryPermission({mode:'readwrite'});
+      if(perm !== 'granted' && interactive){
+        perm = await backupDirHandle.requestPermission({mode:'readwrite'});
+      }
+      if(perm === 'granted'){
+        const fileHandle = await backupDirHandle.getFileHandle(filename, {create:true});
+        const writable = await fileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        return true; // saved directly to chosen folder
+      }
+    }catch(e){ /* fall through to normal download below */ }
+  }
+  downloadFile(filename, content, mime);
+  return false;
+}
 
 /* ============================================================
    UTILITIES
@@ -1095,6 +1299,7 @@ function saveCategories(){ localStorage.setItem(LS_KEYS.categories, JSON.stringi
 function saveBudgets(){ localStorage.setItem(LS_KEYS.budgets, JSON.stringify(state.budgets)); }
 function saveSettings(){ localStorage.setItem(LS_KEYS.settings, JSON.stringify(state.settings)); }
 function saveDebts(){ localStorage.setItem(LS_KEYS.debts, JSON.stringify(state.debts)); }
+function saveSubscriptions(){ localStorage.setItem(LS_KEYS.subscriptions, JSON.stringify(state.subscriptions)); }
 
 function loadAll(){
   try{
@@ -1117,6 +1322,10 @@ function loadAll(){
     const d = localStorage.getItem(LS_KEYS.debts);
     state.debts = d ? JSON.parse(d) : [];
   }catch(e){ state.debts = []; }
+  try{
+    const s = localStorage.getItem(LS_KEYS.subscriptions);
+    state.subscriptions = s ? JSON.parse(s) : [];
+  }catch(e){ state.subscriptions = []; }
   if(!localStorage.getItem(LS_KEYS.categories)){ saveCategories(); }
 }
 
@@ -1235,6 +1444,7 @@ const VIEW_META = {
   budgets:{title:'Budgets', sub:'Keep monthly spending on track'},
   recurring:{title:'Recurring & Debts', sub:'Subscriptions, bills, and money you owe'},
   categories:{title:'Categories', sub:'Customize how you organize your money'},
+  subscriptions:{title:'Subscriptions', sub:'Track your entertainment & subscription costs'},
   reports:{title:'Reports', sub:'Understand your spending patterns'},
   settings:{title:'Settings', sub:'Currency, theme, backups & data'}
 };
@@ -1256,6 +1466,7 @@ function renderCurrentView(){
   else if(state.currentView==='budgets') renderBudgets();
   else if(state.currentView==='recurring') renderRecurringDebts();
   else if(state.currentView==='categories') renderCategories();
+  else if(state.currentView==='subscriptions') renderSubscriptions();
   else if(state.currentView==='reports') renderReports();
   else if(state.currentView==='settings') updateSettingsBackupInfo();
 }
@@ -1751,6 +1962,96 @@ function deleteCategory(id){
 }
 
 /* ============================================================
+   SUBSCRIPTIONS
+============================================================ */
+function renderSubscriptions(){
+  const grid = document.getElementById('subGrid');
+  const emptyState = document.getElementById('subEmptyState');
+
+  const total = state.subscriptions.reduce((s,x)=> s + (x.amount||0), 0);
+  document.getElementById('statSubTotal').textContent = fmtMoney(total);
+  document.getElementById('statSubYearly').textContent = fmtMoney(total*12);
+  document.getElementById('statSubCount').textContent = state.subscriptions.length + ' subscription' + (state.subscriptions.length!==1?'s':'');
+
+  if(state.subscriptions.length===0){
+    grid.innerHTML=''; emptyState.classList.remove('hidden'); return;
+  }
+  emptyState.classList.add('hidden');
+
+  grid.innerHTML = state.subscriptions.slice().sort((a,b)=> (b.amount||0)-(a.amount||0)).map(s=>{
+    return `<div class="debt-card">
+      <div class="debt-head">
+        <div>
+          <div class="name">${s.icon||'🎬'} ${escapeHtml(s.name)}</div>
+          <div class="debt-type">${s.dueDay ? 'Bills on day '+s.dueDay : 'Monthly'}</div>
+        </div>
+        <div class="debt-actions">
+          <button class="icon-btn" data-edit-sub="${s.id}" aria-label="Edit ${escapeHtml(s.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+          <button class="icon-btn" data-delete-sub="${s.id}" aria-label="Delete ${escapeHtml(s.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg></button>
+        </div>
+      </div>
+      <div class="debt-balance">${fmtMoney(s.amount||0)}<span style="font-size:0.7rem; font-weight:500; color:var(--color-ink-faint);"> /mo</span></div>
+    </div>`;
+  }).join('');
+}
+
+function openSubModal(subId){
+  state.editingSubId = subId || null;
+  const form = document.getElementById('subForm');
+  form.reset();
+  clearFormErrors('subForm');
+  const sub = subId ? state.subscriptions.find(s=>s.id===subId) : null;
+  document.getElementById('subId').value = sub ? sub.id : '';
+  document.getElementById('subName').value = sub ? sub.name : '';
+  document.getElementById('subAmount').value = sub ? sub.amount : '';
+  document.getElementById('subIcon').value = sub ? (sub.icon||'') : '🎬';
+  document.getElementById('subDueDay').value = sub && sub.dueDay ? sub.dueDay : '';
+  document.getElementById('subModalTitle').textContent = sub ? 'Edit subscription' : 'Add subscription';
+  document.getElementById('subSubmitBtn').textContent = sub ? 'Save changes' : 'Add subscription';
+  document.getElementById('subModalOverlay').classList.add('active');
+  document.getElementById('subName').focus();
+}
+function closeSubModal(){ document.getElementById('subModalOverlay').classList.remove('active'); state.editingSubId=null; }
+
+function submitSubForm(e){
+  e.preventDefault();
+  clearFormErrors('subForm');
+  let valid = true;
+  const name = document.getElementById('subName').value.trim();
+  if(!name){ setFieldError('subName'); valid=false; }
+  const amount = parseFloat(document.getElementById('subAmount').value);
+  if(isNaN(amount) || amount < 0){ setFieldError('subAmount'); valid=false; }
+  if(!valid) return;
+
+  const icon = document.getElementById('subIcon').value.trim() || '🎬';
+  const dueDayRaw = document.getElementById('subDueDay').value;
+  const dueDay = dueDayRaw ? parseInt(dueDayRaw,10) : null;
+
+  const id = document.getElementById('subId').value;
+  if(id){
+    const sub = state.subscriptions.find(s=>s.id===id);
+    Object.assign(sub, {name, amount, icon, dueDay});
+    showToast('Subscription updated');
+  } else {
+    state.subscriptions.push({id: uid('sub'), name, amount, icon, dueDay});
+    showToast('Subscription added');
+  }
+  saveSubscriptions();
+  closeSubModal();
+  renderSubscriptions();
+}
+
+function deleteSubscription(id){
+  const sub = state.subscriptions.find(s=>s.id===id);
+  askConfirm('Delete subscription?', `This will permanently remove "${sub.name}" from your subscriptions.`, ()=>{
+    state.subscriptions = state.subscriptions.filter(s=>s.id!==id);
+    saveSubscriptions();
+    renderSubscriptions();
+    showToast('Subscription deleted');
+  });
+}
+
+/* ============================================================
    BUDGETS
 ============================================================ */
 function currentMonthRange(){
@@ -2121,6 +2422,7 @@ function updateSettingsBackupInfo(){
 function updateBackupUI(){
   updateBackupBanner();
   updateSettingsBackupInfo();
+  updateBackupFolderUI();
 }
 
 function applyTheme(theme){
@@ -2147,16 +2449,16 @@ function downloadFile(filename, content, mime){
   URL.revokeObjectURL(url);
 }
 
-function exportJson(){
-  const data = { transactions: state.transactions, categories: state.categories, budgets: state.budgets, debts: state.debts, settings: state.settings, exportedAt: new Date().toISOString() };
-  downloadFile('finance-tracker-backup.json', JSON.stringify(data, null, 2), 'application/json');
+async function exportJson(interactive){
+  const data = { transactions: state.transactions, categories: state.categories, budgets: state.budgets, debts: state.debts, subscriptions: state.subscriptions, settings: state.settings, exportedAt: new Date().toISOString() };
+  const savedToFolder = await saveBackupFile('finance-tracker-backup.json', JSON.stringify(data, null, 2), 'application/json', !!interactive);
   state.settings.lastBackupDate = todayISO();
   saveSettings();
   updateBackupUI();
-  showToast('JSON export downloaded');
+  showToast(savedToFolder ? 'Backup saved to "' + backupDirHandle.name + '"' : 'JSON export downloaded');
 }
 
-function exportCsv(){
+async function exportCsv(interactive){
   const rows = [['Date','Description','Category','Type','Amount','Notes','Recurring']];
   getFilteredTransactions().slice().reverse().forEach(t=>{
     rows.push([t.date, t.description, categoryLabel(t.category), t.type, t.amount, t.notes||'', t.recurring||'none']);
@@ -2165,8 +2467,8 @@ function exportCsv(){
     const s = String(v).replace(/"/g,'""');
     return /[",\n]/.test(s) ? '"'+s+'"' : s;
   }).join(',')).join('\n');
-  downloadFile('transactions.csv', csv, 'text/csv');
-  showToast('CSV export downloaded');
+  const savedToFolder = await saveBackupFile('transactions.csv', csv, 'text/csv', !!interactive);
+  showToast(savedToFolder ? 'CSV saved to "' + backupDirHandle.name + '"' : 'CSV export downloaded');
 }
 
 function importJson(file){
@@ -2178,13 +2480,14 @@ function importJson(file){
     if(!data || !Array.isArray(data.transactions) || !Array.isArray(data.categories)){
       showToast('This file is not a valid backup', true); return;
     }
-    askConfirm('Replace all data?', 'Importing will overwrite your current transactions, categories, budgets, debts and settings. This cannot be undone.', ()=>{
+    askConfirm('Replace all data?', 'Importing will overwrite your current transactions, categories, budgets, debts, subscriptions and settings. This cannot be undone.', ()=>{
       state.transactions = data.transactions || [];
       state.categories = data.categories || defaultCategories();
       state.budgets = data.budgets || {};
       state.debts = Array.isArray(data.debts) ? data.debts : [];
+      state.subscriptions = Array.isArray(data.subscriptions) ? data.subscriptions : [];
       state.settings = Object.assign(defaultSettings(), data.settings || {});
-      saveTransactions(); saveCategories(); saveBudgets(); saveDebts(); saveSettings();
+      saveTransactions(); saveCategories(); saveBudgets(); saveDebts(); saveSubscriptions(); saveSettings();
       applyTheme(state.settings.theme);
       document.getElementById('currencySelect').value = state.settings.currency;
       refreshAll();
@@ -2335,6 +2638,33 @@ function wireEvents(){
     if(delId) deleteTransaction(delId);
   });
 
+  document.getElementById('addSubBtn').addEventListener('click', ()=>openSubModal());
+  document.getElementById('addSubEmptyBtn').addEventListener('click', ()=>openSubModal());
+  document.getElementById('subModalClose').addEventListener('click', closeSubModal);
+  document.getElementById('subCancelBtn').addEventListener('click', closeSubModal);
+  document.getElementById('subModalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='subModalOverlay') closeSubModal(); });
+  document.getElementById('subForm').addEventListener('submit', submitSubForm);
+  document.getElementById('subGrid').addEventListener('click', (e)=>{
+    const editId = e.target.closest('[data-edit-sub]')?.dataset.editSub;
+    const delId = e.target.closest('[data-delete-sub]')?.dataset.deleteSub;
+    if(editId) openSubModal(editId);
+    if(delId) deleteSubscription(delId);
+  });
+
+  document.getElementById('budgetGrid').addEventListener('click', (e)=>{
+    const id = e.target.closest('[data-budget-save]')?.dataset.budgetSave;
+    if(id) saveBudgetFor(id);
+  });
+
+  document.getElementById('addRecurringBtn').addEventListener('click', openRecurringCostModal);
+  document.getElementById('addRecurringEmptyBtn').addEventListener('click', openRecurringCostModal);
+  document.getElementById('recurringTableBody').addEventListener('click', (e)=>{
+    const editId = e.target.closest('[data-edit-tx]')?.dataset.editTx;
+    const delId = e.target.closest('[data-delete-tx]')?.dataset.deleteTx;
+    if(editId) openTxModal(editId);
+    if(delId) deleteTransaction(delId);
+  });
+
   document.getElementById('addDebtBtn').addEventListener('click', ()=>openDebtModal());
   document.getElementById('addDebtEmptyBtn').addEventListener('click', ()=>openDebtModal());
   document.getElementById('debtModalClose').addEventListener('click', closeDebtModal);
@@ -2361,8 +2691,10 @@ function wireEvents(){
   });
   document.getElementById('loadDemoBtn').addEventListener('click', loadDemoData);
   document.getElementById('removeDemoBtn').addEventListener('click', removeDemoData);
-  document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
-  document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+  document.getElementById('exportJsonBtn').addEventListener('click', ()=>exportJson(true));
+  document.getElementById('exportCsvBtn').addEventListener('click', ()=>exportCsv(true));
+  document.getElementById('chooseBackupFolderBtn').addEventListener('click', chooseBackupFolder);
+  document.getElementById('clearBackupFolderBtn').addEventListener('click', clearBackupFolder);
 
   document.getElementById('autoBackupToggle').addEventListener('click', (e)=>{
     state.settings.autoBackupEnabled = !state.settings.autoBackupEnabled;
@@ -2371,8 +2703,8 @@ function wireEvents(){
     updateBackupUI();
     showToast('Automatic backups ' + (state.settings.autoBackupEnabled ? 'enabled' : 'disabled'));
   });
-  document.getElementById('backNowBtn').addEventListener('click', exportJson);
-  document.getElementById('backupBannerExport').addEventListener('click', exportJson);
+  document.getElementById('backNowBtn').addEventListener('click', ()=>exportJson(true));
+  document.getElementById('backupBannerExport').addEventListener('click', ()=>exportJson(true));
   document.getElementById('backupBannerSnooze').addEventListener('click', ()=>{
     state.settings.backupBannerSnoozeUntil = isoDate(addDays(new Date(), 7));
     saveSettings();
@@ -2399,7 +2731,7 @@ function wireEvents(){
 
   document.addEventListener('keydown', (e)=>{
     if(e.key==='Escape'){
-      closeTxModal(); closeCatModal(); closeDebtModal(); closeConfirm(); closeSidebarMobile();
+      closeTxModal(); closeCatModal(); closeSubModal(); closeDebtModal(); closeConfirm(); closeSidebarMobile();
     }
   });
 }
@@ -2407,7 +2739,7 @@ function wireEvents(){
 /* ============================================================
    INIT
 ============================================================ */
-function init(){
+async function init(){
   loadAll();
   generateRecurringInstances();
   wireEvents();
@@ -2416,6 +2748,7 @@ function init(){
   document.getElementById('txDate').value = todayISO();
   populateCategorySelects();
   switchView('dashboard');
+  await restoreBackupFolder();
   maybeAutoBackup();
   updateBackupUI();
 }
